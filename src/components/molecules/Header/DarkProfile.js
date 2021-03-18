@@ -8,7 +8,6 @@ const DarkProfile = ({onPrees}) => {
   return (
     <View style={styles.container}>
       <Button type="icon-only" icon="back-light" onPress={onPrees} />
-
       <View style={styles.content}>
         <Text style={styles.name}>Nairobi Putri Hayza</Text>
         <Text style={styles.desc}>Dokter Anak</Text>
