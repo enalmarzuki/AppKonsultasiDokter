@@ -1,27 +1,79 @@
-import React from 'react';
-import {Image, StyleSheet, Text, View} from 'react-native';
-import {IconAddPhoto, ILPhotoNull} from '../../assets';
+import React, {useState} from 'react';
+import {Image, StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {IconAddPhoto, ILPhotoNull, IconRemovePhoto} from '../../assets';
 import {Button, Gap, Header, Link} from '../../components';
-import {colors, fonts} from '../../utils';
+import {colors, fonts, storeData} from '../../utils';
+import ImagePicker from '@connectedbits/react-native-image-picker';
+import {showMessage} from 'react-native-flash-message';
+import {Firebase} from '../../config';
 
-const UploadPhoto = ({navigation}) => {
+const UploadPhoto = ({navigation, route}) => {
+  const {fullName, profession, uid} = route.params;
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [photo, setPhoto] = useState(ILPhotoNull);
+  const [photoForDB, setPhotoForDB] = useState('');
+
+  const getImage = () => {
+    ImagePicker.launchImageLibrary(
+      {quality: 0.5, maxWidth: 200, maxHeight: 200},
+      (response) => {
+        console.log('response', response);
+        // const source = {uri: response.uri};
+        if (response.didCancel || response.error) {
+          showMessage({
+            message: 'oops, sepertinya anda tidak memili foto nya ?',
+            type: 'default',
+            backgroundColor: colors.error,
+            color: colors.white,
+          });
+        } else {
+          console.log('response : ', response.type);
+
+          setPhotoForDB(`data:image/jpeg;base64, ${response.data}`);
+
+          const source = {uri: 'data:image/jpeg;base64,' + response.data};
+          setPhoto(source);
+          setHasPhoto(true);
+        }
+      },
+    );
+  };
+
+  const uploadAndContinue = () => {
+    Firebase.database()
+      .ref('/users/' + uid + '/')
+      .update({photo: photoForDB});
+
+    const data = route.params;
+    data.photo = photoForDB;
+
+    storeData('user', data);
+
+    navigation.replace('MainApp');
+  };
+
   return (
     <View style={styles.page}>
       <Header title="Upload Photo" />
       <View style={styles.content}>
         <View style={styles.profile}>
-          <View style={styles.avatarWrapper}>
-            <Image source={ILPhotoNull} style={styles.avatar} />
-            <IconAddPhoto style={styles.addPhoto} />
-          </View>
-          <Text style={styles.name}>Shayna Melinda</Text>
-          <Text style={styles.profession}>Product Designer</Text>
+          <TouchableOpacity style={styles.avatarWrapper} onPress={getImage}>
+            <Image source={photo} style={styles.avatar} />
+            {hasPhoto ? (
+              <IconRemovePhoto style={styles.addPhoto} />
+            ) : (
+              <IconAddPhoto style={styles.addPhoto} />
+            )}
+          </TouchableOpacity>
+          <Text style={styles.name}>{fullName}</Text>
+          <Text style={styles.profession}>{profession}</Text>
         </View>
 
         <View>
           <Button
+            disable={!hasPhoto}
             title="Upload and Continue"
-            onPress={() => navigation.replace('MainApp')}
+            onPress={uploadAndContinue}
           />
           <Gap height={30} />
           <Link
@@ -45,7 +97,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  avatar: {width: 110, height: 110},
+  avatar: {width: 110, height: 110, borderRadius: 110 / 2},
   avatarWrapper: {
     width: 130,
     height: 130,
@@ -65,6 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.text.primary,
     textAlign: 'center',
+    textTransform: 'capitalize',
   },
   profession: {
     fontFamily: fonts.primary.normal,
@@ -72,6 +125,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     marginTop: 4,
+    textTransform: 'capitalize',
   },
   content: {
     paddingHorizontal: 40,

@@ -1,5 +1,11 @@
 import React from 'react';
 import {ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {
+  DummyDoctor2,
+  DummyDoctor3,
+  DummyDoctor5,
+  JSONCategoryDoctor,
+} from '../../assets';
 import {Gap} from '../../components';
 import {
   DoctorCategory,
@@ -8,12 +14,6 @@ import {
   RatedDoctor,
 } from '../../components/molecules';
 import {colors, fonts} from '../../utils';
-import {
-  DummyDoctor2,
-  DummyDoctor3,
-  DummyDoctor5,
-  JSONCategoryDoctor,
-} from '../../assets';
 
 const Doctor = ({navigation}) => {
   return (
